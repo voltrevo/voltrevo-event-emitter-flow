@@ -1,30 +1,36 @@
-'use strict';
+// @flow
 
-module.exports = function() {
-  var collection = {};
+type Wrapper<T> = { value: ?T };
 
-  var elements = [];
+export default class Collection<T> {
+  elements: Wrapper<T>[] = [];
 
-  collection.add = function(value) {
-    var element = { value: value };
-    elements.push(element);
+  add(value: T) {
+    const element: Wrapper<T> = { value };
+    this.elements.push(element);
 
     return {
-      remove: function() {
+      remove() {
         element.value = undefined;
-      }
+      },
     };
-  };
+  }
 
-  collection.toArray = function() {
-    elements = elements.filter(function(element) {
-      return element.value !== undefined;
-    });
+  toArray(): T[] {
+    const newElements: Wrapper<T>[] = [];
+    const values: T[] = [];
 
-    return elements.map(function(element) {
-      return element.value;
-    });
-  };
+    for (const element of this.elements) {
+      const value = element.value;
 
-  return collection;
-};
+      if (value != null) {
+        newElements.push(element);
+        values.push(value);
+      }
+    }
+
+    this.elements = newElements;
+
+    return values;
+  }
+}
