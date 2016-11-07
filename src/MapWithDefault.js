@@ -1,24 +1,25 @@
-'use strict';
+// @flow
 
-module.exports = function(defaultGenerator) {
-  var map = {};
+export default class MapWithDefault<T> {
+  underlyingMap: { [key: string]: T };
+  defaultGenerator: () => T;
 
-  var underlyingMap = {};
+  constructor(defaultGenerator: () => T) {
+    this.defaultGenerator = defaultGenerator;
+  }
 
-  map.get = function(key) {
-    var value = underlyingMap[key];
+  get(key: string): T {
+    let value = this.underlyingMap[key];
 
     if (value === undefined) {
-      value = defaultGenerator();
-      map.set(key, value);
+      value = this.defaultGenerator();
+      this.set(key, value);
     }
 
     return value;
-  };
+  }
 
-  map.set = function(key, value) {
-    underlyingMap[key] = value;
-  };
-
-  return map;
-};
+  set(key: string, value: T) {
+    this.underlyingMap[key] = value;
+  }
+}
