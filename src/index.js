@@ -1,35 +1,42 @@
-'use strict';
+// @flow
 
-var Collection = require('./Collection.js');
-var MapWithDefault = require('./MapWithDefault.js');
+import Collection from './Collection';
+import MapWithDefault from './MapWithDefault';
 
-module.exports = function(asyncParam) {
-  var async = asyncParam || global.setTimeout;
+type AsyncFn = (job: () => void) => void;
 
-  var eventEmitter = {};
+type Handler<T> = (value: T) => void;
 
-  var events = MapWithDefault(Collection);
+export default class EventEmitter<T> {
+  async: AsyncFn;
+  events: MapWithDefault<Collection<Handler<T>>>;
 
-  eventEmitter.on = function(evt, handler) {
-    return events.get(evt).add(handler);
-  };
+  constructor(async: AsyncFn = (job) => { setTimeout(job); }) {
+    this.events = new MapWithDefault(
+      () => new Collection()
+    );
 
-  eventEmitter.once = function(evt, handler) {
-    var listener = events.get(evt).add(function(value) {
+    this.async = async;
+  }
+
+  on(evt: string, handler: Handler<T>) {
+    return this.events.get(evt).add(handler);
+  }
+
+  once(evt: string, handler: Handler<T>) {
+    const listener = this.events.get(evt).add((value) => {
       listener.remove();
       handler(value);
     });
 
     return listener;
-  };
+  }
 
-  eventEmitter.emit = function(evt, value) {
-    async(function() {
-      events.get(evt).toArray().forEach(function(handler) {
+  emit = (evt: string, value: T) => {
+    this.async(() => {
+      this.events.get(evt).toArray().forEach((handler) => {
         handler(value);
       });
     });
   };
-
-  return eventEmitter;
-};
+}
